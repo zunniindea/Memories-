@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>추억과 희망</title>
+  <!-- Pretendard & 고운바탕 폰트 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" />
+
+  <style>
+    /* =====================================================================
+       부드럽고 따뜻한 별빛 & 라운지 감성 UI 테마
+       ===================================================================== */
+    :root {
+      --bg-base: #0E1118;
+      --bg-surface: #151A24;
+      --bg-card: rgba(29, 35, 48, 0.72);
+      --bg-card-active: rgba(40, 48, 66, 0.9);
+      --bg-paper: #FBF8F3;
+      --ink-paper: #282420;
+      --text-primary: #F5F2EB;
+      --text-secondary: #C2BCB0;
+      --text-muted: #827C72;
+      --accent-gold: #E5C195;
+      --accent-gold-soft: rgba(229, 193, 149, 0.14);
+      --accent-gold-border: rgba(229, 193, 149, 0.34);
+      --border-soft: rgba(245, 242, 235, 0.09);
+      --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100dvh;
+      background-color: #090B10;
+      color: var(--text-primary);
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.75;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .serif-kr {
+      font-family: 'Gowun Batang', serif;
+    }
+
+    /* 배경 별빛 캔버스 */
+    #starCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 모바일 세로형 메인 쉘 */
+    .story-shell {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 450px;
+      min-height: 100dvh;
+      margin: 0 auto;
+      background: radial-gradient(circle at 50% 0%, rgba(42, 50, 72, 0.42) 0%, rgba(14, 17, 24, 0.94) 65%);
+      box-shadow: 0 0 70px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid rgba(255, 255, 255, 0.05);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
+    }
+
+    /* 상단 네비게이션 & 진행 바 */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 22px;
+      background: rgba(14, 17, 24, 0.78);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-soft);
+      transition: opacity 0.55s var(--ease-fluid), transform 0.55s var(--ease-fluid);
+    }
+
+    .top-nav.nav-hidden {
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+    }
+
+    .chapter-dots {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ch-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(245, 242, 235, 0.2);
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: all 0.45s var(--ease-fluid);
+    }
+
+    .ch-dot.active {
+      width: 26px;
+      background: var(--accent-gold);
+      box-shadow: 0 0 10px rgba(229, 193, 149, 0.45);
+    }
+
+    .audio-btn {
+      background: var(--accent-gold-soft);
+      border: 1px solid var(--accent-gold-border);
+      color: var(--accent-gold);
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s var(--ease-fluid);
+    }
+
+    .audio-btn:hover {
+      background: rgba(229, 193, 149, 0.24);
+      transform: translateY(-1px);
+    }
+
+    /* 부드러운 화면 전환 컨테이너 */
+    .chapter-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .chapter-screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      padding: 34px 24px 48px;
+      opacity: 0;
+      transform: translateY(18px) scale(0.99);
+      transition: opacity 0.6s var(--ease-fluid), transform 0.6s var(--ease-fluid);
+    }
+
+    .chapter-screen.active-chapter {
+      display: flex;
+    }
+
+    .chapter-screen.visible-chapter {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* 카드 순차 등장 애니메이션 */
+    .stagger-item {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.55s var(--ease-fluid), transform 0.55s var(--ease-fluid), background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .visible-chapter .stagger-item {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .visible-chapter .stagger-item:nth-child(1) { transition-delay: 0.06s; }
+    .visible-chapter .stagger-item:nth-child(2) { transition-delay: 0.13s; }
+    .visible-chapter .stagger-item:nth-child(3) { transition-delay: 0.20s; }
+    .visible-chapter .stagger-item:nth-child(4) { transition-delay: 0.27s; }
+
+    /* =====================================================================
+       Chapter 0: 프롤로그 (시작 화면)
+       ===================================================================== */
+    .prologue-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px 12px;
+    }
+
+    .moon-emblem {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 1px solid var(--accent-gold-border);
+      background: radial-gradient(circle at 35% 35%, rgba(229, 193, 149, 0.25), transparent 72%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+      box-shadow: 0 0 36px rgba(229, 193, 149, 0.14);
+      animation: floatGentle 4.5s ease-in-out infinite;
+    }
+
+    @keyframes floatGentle {
+      0%, 100% { transform: translateY(0); box-shadow: 0 0 28px rgba(229, 193, 149, 0.12); }
+      50% { transform: translateY(-6px); box-shadow: 0 10px 42px rgba(229, 193, 149, 0.24); }
+    }
+
+    .prologue-label {
+      font-size: 11.5px;
+      letter-spacing: 0.22em;
+      color: var(--accent-gold);
+      margin-bottom: 14px;
+      font-weight: 600;
+    }
+
+    .prologue-title {
+      font-size: 25px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.48;
+      margin-bottom: 18px;
+      word-break: keep-all;
+    }
+
+    .prologue-desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.85;
+      margin-bottom: 42px;
+      word-break: keep-all;
+      max-width: 315px;
+    }
+
+    .enter-story-btn {
+      width: 100%;
+      max-width: 230px;
+      padding: 15px 24px;
+      border-radius: 999px;
+      border: 1px solid var(--accent-gold-border);
+      background: linear-gradient(135deg, rgba(229, 193, 149, 0.24), rgba(229, 193, 149, 0.08));
+      color: var(--text-primary);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: all 0.4s var(--ease-fluid);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+    }
+
+    .enter-story-btn:hover,
+    .enter-story-btn:active {
+      background: var(--accent-gold);
+      color: #12151E;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(229, 193, 149, 0.28);
+    }
+
+    .sound-notice {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* 공통 챕터 헤더 */
+    .ch-header {
+      margin-bottom: 26px;
+    }
+
+    .ch-num {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      color: var(--accent-gold);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .ch-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.42;
+      margin-bottom: 8px;
+      word-break: keep-all;
+    }
+
+    .ch-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.68;
+      word-break: keep-all;
+    }
+
+    /* =====================================================================
+       Chapter 1: 누나로 인해 달라진 내 하루 (설렘의 조각들)
+       ===================================================================== */
+    .timeline-list {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .timeline-list::before {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 10px;
+      bottom: 10px;
+      width: 1px;
+      background: linear-gradient(180deg, var(--accent-gold), rgba(229, 193, 149, 0.12));
+    }
+
+    .timeline-item {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: 16px;
+      padding: 18px 18px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 24px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--bg-base);
+      border: 2px solid var(--accent-gold);
+      transition: all 0.35s var(--ease-fluid);
+    }
+
+    .timeline-item.active-memory {
+      border-color: var(--accent-gold-border);
+      background: var(--bg-card-active);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+    }
+
+    .timeline-item.active-memory::before {
+      background: var(--accent-gold);
+      box-shadow: 0 0 12px var(--accent-gold);
+      transform: scale(1.15);
+    }
+
+    .tl-moment {
+      font-size: 11.5px;
+      color: var(--accent-gold);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .tl-heading {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .tl-story {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.72;
+      word-break: keep-all;
+    }
+
+    /* =====================================================================
+       Chapter 2: 앞으로 함께하고 싶은 순간들 (별빛 위시 카드)
+       ===================================================================== */
+    .wish-progress-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(229, 193, 149, 0.08);
+      border: 1px solid var(--accent-gold-border);
+      border-radius: 12px;
+      padding: 11px 15px;
+      margin-bottom: 18px;
+      font-size: 13px;
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+
+    .wish-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+
+    .wish-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: 16px;
+      padding: 18px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      transition: all 0.4s var(--ease-fluid);
+    }
+
+    .wish-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .wish-card.lit-wish {
+      background: var(--bg-card-active);
+      border-color: var(--accent-gold-border);
+      box-shadow: 0 8px 24px rgba(229, 193, 149, 0.09);
+    }
+
+    .wish-star-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border-soft);
+      background: rgba(255, 255, 255, 0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: all 0.4s var(--ease-spring);
+      color: var(--text-muted);
+    }
+
+    .wish-card.lit-wish .wish-star-icon {
+      background: var(--accent-gold);
+      border-color: var(--accent-gold);
+      color: #141720;
+      transform: scale(1.08) rotate(12deg);
+      box-shadow: 0 0 16px rgba(229, 193, 149, 0.5);
+    }
+
+    .wish-text-wrap {
+      flex: 1;
+    }
+
+    .wish-title {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .wish-desc {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    /* =====================================================================
+       Chapter 3: 누나가 언제나 기억해 줬으면 하는 진심 (마음 카드)
+       ===================================================================== */
+    .drawer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .drawer-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.4s var(--ease-fluid);
+    }
+
+    .drawer-item.opened-drawer {
+      border-color: var(--accent-gold-border);
+      background: var(--bg-card-active);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+    }
+
+    .drawer-trigger {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 18px 18px;
+      text-align: left;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .drawer-trigger-left {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .drawer-tag {
+      font-size: 11.5px;
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+
+    .drawer-question {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      word-break: keep-all;
+    }
+
+    .drawer-arrow {
+      font-size: 13px;
+      color: var(--accent-gold);
+      transition: transform 0.35s var(--ease-fluid);
+      flex-shrink: 0;
+    }
+
+    .drawer-item.opened-drawer .drawer-arrow {
+      transform: rotate(180deg);
+    }
+
+    .drawer-content {
+      display: none;
+      padding: 0 18px 20px;
+      border-top: 1px dashed rgba(229, 193, 149, 0.2);
+      margin-top: 2px;
+      padding-top: 15px;
+      font-size: 14.5px;
+      color: #EFEAE0;
+      line-height: 1.8;
+      word-break: keep-all;
+    }
+
+    .drawer-item.opened-drawer .drawer-content {
+      display: block;
+      animation: softSlide 0.45s var(--ease-fluid);
+    }
+
+    @keyframes softSlide {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =====================================================================
+       Chapter 4: 진심을 담은 편지 & 약속의 등불
+       ===================================================================== */
+    .letter-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .sealed-envelope {
+      width: 100%;
+      background: linear-gradient(145deg, #222838, #181C27);
+      border: 1px solid var(--accent-gold-border);
+      border-radius: 18px;
+      padding: 38px 24px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.35);
+      transition: all 0.45s var(--ease-fluid);
+    }
+
+    .sealed-envelope:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent-gold);
+    }
+
+    .wax-seal-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      background: radial-gradient(circle at 30% 30%, #D97964, #9E4231);
+      border: 2px solid #EBD0AD;
+      color: #FFF9F2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.38);
+      transition: transform 0.35s var(--ease-spring);
+    }
+
+    .sealed-envelope:hover .wax-seal-btn {
+      transform: scale(1.08);
+    }
+
+    .env-caption {
+      font-size: 16.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .env-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* 펼쳐진 편지지 */
+    .unfolded-paper {
+      display: none;
+      width: 100%;
+      background: var(--bg-paper);
+      color: var(--ink-paper);
+      border-radius: 18px;
+      padding: 30px 24px 32px;
+      box-shadow: 0 22px 52px rgba(0, 0, 0, 0.48);
+      border: 1px solid #E6DEC8;
+    }
+
+    .unfolded-paper.visible-paper {
+      display: block;
+      animation: paperOpen 0.65s var(--ease-fluid);
+    }
+
+    @keyframes paperOpen {
+      0% { opacity: 0; transform: translateY(16px) scale(0.97); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .paper-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #E5DDD0;
+      font-size: 13px;
+      color: #7A7267;
+    }
+
+    .paper-content {
+      font-size: 15.5px;
+      line-height: 1.95;
+      color: #282420;
+      white-space: pre-line;
+      word-break: keep-all;
+    }
+
+    .paper-footer {
+      margin-top: 26px;
+      padding-top: 16px;
+      border-top: 1px dashed #DFD6C5;
+      text-align: right;
+      font-size: 15px;
+      font-weight: 700;
+      color: #282420;
+    }
+
+    /* 하단 별빛 스탬프 영역 */
+    .closing-light-box {
+      display: none;
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--accent-gold-border);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .closing-light-box.show-light-box {
+      display: block;
+      animation: softSlide 0.55s var(--ease-fluid);
+    }
+
+    .light-toggle-btn {
+      padding: 11px 20px;
+      border-radius: 999px;
+      border: 1px solid var(--accent-gold-border);
+      background: var(--accent-gold-soft);
+      color: var(--accent-gold);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.35s var(--ease-spring);
+    }
+
+    .light-toggle-btn.lit-active {
+      background: var(--accent-gold);
+      color: #141720;
+      box-shadow: 0 0 28px rgba(229, 193, 149, 0.55);
+      transform: scale(1.04);
+    }
+
+    .light-reply-text {
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--text-primary);
+      line-height: 1.65;
+      min-height: 22px;
+    }
+
+    /* 하단 이동 버튼 */
+    .bottom-nav-row {
+      margin-top: auto;
+      padding-top: 14px;
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .next-ch-btn {
+      flex: 1;
+      padding: 15px 18px;
+      border-radius: 13px;
+      border: 1px solid var(--accent-gold-border);
+      background: var(--accent-gold);
+      color: #141720;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-fluid);
+    }
+
+    .next-ch-btn:hover {
+      filter: brightness(1.05);
+    }
+
+    .next-ch-btn:active {
+      transform: scale(0.98);
+    }
+
+    .prev-ch-btn {
+      padding: 15px 16px;
+      border-radius: 13px;
+      border: 1px solid var(--border-soft);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.25s ease;
+    }
+
+    .prev-ch-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 잔잔한 밤하늘 별빛 배경 캔버스 -->
+  <canvas id="starCanvas"></canvas>
+
+  <div class="story-shell">
+    <!-- 상단 네비게이션 바 -->
+    <header class="top-nav nav-hidden" id="topNav">
+      <div class="chapter-dots">
+        <button type="button" class="ch-dot" id="chDot1" data-ch="1" aria-label="챕터 1"></button>
+        <button type="button" class="ch-dot" id="chDot2" data-ch="2" aria-label="챕터 2"></button>
+        <button type="button" class="ch-dot" id="chDot3" data-ch="3" aria-label="챕터 3"></button>
+        <button type="button" class="ch-dot" id="chDot4" data-ch="4" aria-label="챕터 4"></button>
+      </div>
+      <button type="button" class="audio-btn" id="audioToggleBtn">
+        <span id="audioIcon">🔇</span>
+        <span id="audioLabel">오르골 켜기</span>
+      </button>
+    </header>
+
+    <main class="chapter-wrap">
+      <!-- =================================================================
+           Chapter 0: 프롤로그 (시작 화면)
+           ================================================================= -->
+      <section class="chapter-screen active-chapter visible-chapter" id="chapter0">
+        <div class="prologue-box">
+          <div class="moon-emblem">
+            <span style="font-size: 26px;">✨</span>
+          </div>
+          <span class="prologue-label" id="prologueLabel">FOR MINA</span>
+          <h1 class="prologue-title serif-kr" id="prologueTitle">
+            누나가 읽는 내내<br />미소 지을 수 있는 이야기들만
+          </h1>
+          <p class="prologue-desc" id="prologueDesc">
+            누나를 알게 된 뒤로 내 하루가 얼마나 따뜻하고 기분 좋게 바뀌었는지, 좋은 마음들만 차곡차곡 눌러 담았어.
+          </p>
+          <button type="button" class="enter-story-btn" id="startStoryBtn">
+            천천히 열어보기
+          </button>
+          <p class="sound-notice">버튼을 누르면 잔잔한 오르골 소리가 함께 켜집니다</p>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           Chapter 1: 누나로 인해 달라진 내 하루 (설렘의 조각들)
+           ================================================================= -->
+      <section class="chapter-screen" id="chapter1">
+        <div class="ch-header">
+          <span class="ch-num">CHAPTER 01</span>
+          <h2 class="ch-title serif-kr">누나로 인해 달라진 내 평범한 하루</h2>
+          <p class="ch-subtitle">카드를 하나씩 눌러보면 요즘 내가 매일 느끼는 기분 좋은 변화들이 적혀 있어</p>
+        </div>
+
+        <div class="timeline-list" id="timelineContainer"></div>
+
+        <div class="bottom-nav-row">
+          <button type="button" class="next-ch-btn" id="toCh2Btn">다음 페이지로 →</button>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           Chapter 2: 앞으로 함께 채워갈 순간들 (별빛 위시 카드)
+           ================================================================= -->
+      <section class="chapter-screen" id="chapter2">
+        <div class="ch-header">
+          <span class="ch-num">CHAPTER 02</span>
+          <h2 class="ch-title serif-kr">누나와 앞으로 함께하고 싶은 것들</h2>
+          <p class="ch-subtitle">
+            카드를 눌러서 우리가 같이 해볼 약속들에 하나씩 불빛을 켜줘
+          </p>
+        </div>
+
+        <div class="wish-progress-bar">
+          <span>켜진 약속의 별빛</span>
+          <span id="wishCountText">1 / 4</span>
+        </div>
+
+        <div class="wish-grid" id="wishContainer"></div>
+
+        <div class="bottom-nav-row">
+          <button type="button" class="prev-ch-btn" id="backCh1Btn">← 이전</button>
+          <button type="button" class="next-ch-btn" id="toCh3Btn">다음 페이지로 →</button>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           Chapter 3: 누나가 언제나 기억해 줬으면 하는 진심
+           ================================================================= -->
+      <section class="chapter-screen" id="chapter3">
+        <div class="ch-header">
+          <span class="ch-num">CHAPTER 03</span>
+          <h2 class="ch-title serif-kr">언제나 누나가 기억해 줬으면 하는 말</h2>
+          <p class="ch-subtitle">
+            어느 날 문득 내 마음이 궁금해질 때 하나씩 열어봐
+          </p>
+        </div>
+
+        <div class="drawer-list" id="drawerContainer"></div>
+
+        <div class="bottom-nav-row">
+          <button type="button" class="prev-ch-btn" id="backCh2Btn">← 이전</button>
+          <button type="button" class="next-ch-btn" id="toCh4Btn">편지 읽으러 가기 →</button>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           Chapter 4: 진심을 담은 편지 & 마무리
+           ================================================================= -->
+      <section class="chapter-screen" id="chapter4">
+        <div class="ch-header">
+          <span class="ch-num">CHAPTER 04</span>
+          <h2 class="ch-title serif-kr">누나에게 보내는 편지</h2>
+          <p class="ch-subtitle" id="letterGuideSub">가운데 봉인을 누르면 편지가 부드럽게 펼쳐져</p>
+        </div>
+
+        <div class="letter-stage">
+          <div class="sealed-envelope" id="sealedEnvelopeBox" role="button" tabindex="0">
+            <div class="wax-seal-btn">✉️</div>
+            <div class="env-caption serif-kr">민아 누나에게</div>
+            <div class="env-sub">눌러서 봉투 열기</div>
+          </div>
+
+          <article class="unfolded-paper" id="unfoldedPaperBox">
+            <div class="paper-header">
+              <span id="paperToText"></span>
+              <span id="paperDateText"></span>
+            </div>
+            <div class="paper-content serif-kr" id="paperBodyText"></div>
+            <div class="paper-footer serif-kr" id="paperSignText"></div>
+          </article>
+        </div>
+
+        <div class="closing-light-box" id="closingLightBox">
+          <button type="button" class="light-toggle-btn" id="lightPromiseBtn">
+            ✨ 오늘 밤도 좋은 꿈 꾸기 (클릭)
+          </button>
+          <p class="light-reply-text serif-kr" id="lightReplyText">
+            버튼을 누르면 내 마지막 인사가 나와
+          </p>
+        </div>
+
+        <div class="bottom-nav-row">
+          <button type="button" class="prev-ch-btn" id="backCh3Btn">← 이전</button>
+          <button type="button" class="next-ch-btn" id="resetStoryBtn">처음부터 다시 보기 ↺</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    /* =====================================================================
+       ★ [내가 직접 수정하는 문구 구역] ★
+       예전 편지나 사이트와 겹치지 않도록, 따뜻하고 기분 좋은 이야기들로만 새로 작성했습니다.
+       ===================================================================== */
+
+    // 1. 챕터 1: 누나로 인해 달라진 내 하루 (설렘 포인트 4가지)
+    const DAILY_CHANGES = [
+      {
+        moment: "아침의 변화",
+        heading: "눈뜨자마자 가장 먼저 찾는 이름",
+        story: "예전에는 아침에 일어나면 그냥 시간만 확인했는데, 요즘은 밤새 누나한테 연락이 왔는지부터 보게 되는 것 같아 오늘 하루는 또 누나랑 무슨 얘기를 나눌까 기대하면서 하루를 시작하는 게 참 좋아"
+      },
+      {
+        moment: "대화할 때의 온도",
+        heading: "아무 말 없이 목소리만 들어도 편한 시간",
+        story: "특별한 주제가 없어도 몇 시간이고 전화기를 붙잡고 웃고 떠드는 시간이 왜 이렇게 빨리 가는지 모르겠어 그리고 누나 목소리를 듣고 있으면 하루 동안 쌓였던 피로가 다 사라지는 기분이 들어"
+      },
+      {
+        moment: "나도 몰랐던 내 모습",
+        heading: "자꾸만 더 다정한 사람이 되고 싶어지는 마음",
+        story: "난 원래는 표현도 서툴고 무뚝뚝한 편이었는데 누나 앞에서는 자꾸 웃음이 나고 작은 거 하나라도 더 챙겨주고 싶어져, 나를 이렇게 기분 좋게 바꿔놓은 건 전부 누나야"
+      },
+      {
+        moment: "고마운 순간들",
+        heading: "사소한 말도 예쁘게 받아주는 사람",
+        story: "내가 툭 던진 장난이나 사소한 말 한마디에도 누나가 해맑게 웃어주고 좋아해 줄 때마다, 내가 꽤 괜찮은 사람이라는 생각이 들게 해줘서 늘 고마워"
+      }
+    ];
+
+    // 2. 챕터 2: 앞으로 우리가 함께 채워갈 순간들 (위시리스트 4가지)
+    const FUTURE_WISHES = [
+      {
+        title: "마주 앉아서 누나가 좋아하는 맛있는 밥 먹기",
+        desc: "화면이나 수화기 너머가 아니라 직접 눈 마주치면서 내가 고른 맛집에서 맛있는 음식 같이 먹기",
+        lit: true
+      },
+      {
+        title: "날씨 좋은 날 나란히 걸으며 산책하기",
+        desc: "기분 좋은 바람 불 때 옆에서 발맞춰 걸으면서 그동안 못 다 한 이야기 실컷 나누기",
+        lit: false
+      },
+      {
+        title: "계절이 바뀔 때마다 새로운 추억 남기기",
+        desc: "다가오는 겨울부터 봄, 여름, 가을까지 계절마다 누나가 활짝 웃을 수 있는 날들로 채워가기",
+        lit: false
+      },
+      {
+        title: "언제나 가장 편안하고 든든한 내 편 되어주기",
+        desc: "무슨 일이 있든 누나가 생각났을 때 제일 먼저 찾고 싶고, 기대고 싶은 사람으로 옆에 있어주기",
+        lit: false
+      }
+    ];
+
+    // 3. 챕터 3: 누나가 언제나 기억해 줬으면 하는 따뜻한 문장들
+    const WARM_DRAWERS = [
+      {
+        tag: "기억해 줬으면 하는 마음 01",
+        question: "누나가 나한테 얼마나 특별한 사람인지 궁금할 때",
+        answer: "누나는 그냥 나한테 반갑게 인사해 주고 웃어주는 것만으로도 내 하루를 통째로 기분 좋게 만드는 사람이야 내가 누나를 아끼고 좋아하는 마음은 누나가 생각하는 것보다 훨씬 더 커"
+      },
+      {
+        tag: "기억해 줬으면 하는 마음 02",
+        question: "오늘 하루도 열심히 보낸 누나에게 해주고 싶은 말",
+        answer: "오늘 하루도 정말 수고 많았어, 거창한 걸 하지 않아도 괜찮아 내 눈엔 지금 그대로의 누나가 제일 멋지고, 언제나 내가 가장 응원하는 사람이라는 걸 잊지 말아 줬으면 해"
+      },
+      
+        tag: "기억해 줬으면 하는 마음 03",
+        question: "잠들기 전 누나에게 건네는 매일 밤의 약속",
+        answer: "매일 밤 누나가 눈을 감기 전에 가장 마지막으로 떠올리는 기분 좋은 생각이 나였으면 좋겠어. 내일 아침에도 내가 제일 먼저 반갑게 인사해 줄 테니까 오늘 밤도 편안하고 좋은 꿈만 꿔"
+      }
+    ];
+
+    // 4. 챕터 4: 이전 편지와 중복되지 않는 따뜻하고 진심 어린 본문 편지
+    const MAIN_LETTER = {
+      to: "To. 민아 누나",
+      date: "어느 따뜻한 밤에",
+      body: `누나, 안녕. 그동안 우리가 나눴던 수없이 많은 대화들 속에서, 내가 누나 덕분에 얼마나 많이 웃고 행복했는지 꼭 전하고 싶어서 이 작은 공간을 만들었어.
+
+누군가를 진심으로 좋아하게 되면 평범했던 일상도 전부 특별해진다는 말을 예전엔 잘 몰랐거든. 근데 요즘 누나랑 매일 연락하고 목소리를 들으면서 그 말이 무슨 뜻인지 하나씩 알게 되는 것 같아. 학교에 있을 때도, 집에 돌아오는 길에도 문득 누나 생각이 나면 나도 모르게 입꼬리가 올라가 있더라.
+
+누나가 나한테 건네주는 다정한 말투랑 기분 좋은 웃음소리가 나한테는 그 어떤 것보다 큰 선물이고 비타민이야. 누나랑 함께하는 시간이 쌓일수록, 앞으로 누나를 더 많이 웃게 해주고 싶다는 마음이 자꾸만 커져.
+
+우리 앞으로 다가올 날들에는 좋은 것만 보고, 맛있는 것만 먹고, 기분 좋은 이야기들만 가득 채워가자. 내가 늘 누나 옆에서 가장 다정하고 든든한 사람으로 있어 줄게.
+
+내 일상에 찾아와 줘서, 그리고 내 마음을 이렇게 따뜻하게 채워줘서 진짜 고마워. 많이 좋아해 누나.`,
+      sign: "누나를 많이 아끼는 예준이가"
+    };
+
+    /* =====================================================================
+       인터랙션 & 부드러운 애니메이션 & 오르골 사운드 엔진
+       ===================================================================== */
+
+    let currentChapter = 0;
+    let audioCtx = null;
+    let musicPlaying = false;
+    let musicTimer = null;
+
+    // Web Audio API 기반의 부드러운 오르골 멜로디
+    function toggleMusicBox(forceStart = false) {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        audioCtx = new AudioContextClass();
+      }
+
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+
+      if (forceStart && musicPlaying) return;
+
+      if (musicPlaying && !forceStart) {
+        musicPlaying = false;
+        if (musicTimer) {
+          clearInterval(musicTimer);
+          musicTimer = null;
+        }
+        document.getElementById("audioIcon").textContent = "🔇";
+        document.getElementById("audioLabel").textContent = "오르골 켜기";
+        return;
+      }
+
+      musicPlaying = true;
+      document.getElementById("audioIcon").textContent = "🎵";
+      document.getElementById("audioLabel").textContent = "오르골 끄기";
+
+      const melodyNotes = [
+        392.00, 493.88, 587.33, 783.99, 587.33, 493.88,
+        349.23, 440.00, 523.25, 698.46, 523.25, 440.00,
+        329.63, 392.00, 493.88, 659.25, 493.88, 392.00,
+        293.66, 369.99, 440.00, 587.33, 440.00, 369.99
+      ];
+      let noteIdx = 0;
+
+      const playSingleNote = () => {
+        if (!musicPlaying || !audioCtx) return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(melodyNotes[noteIdx % melodyNotes.length], now);
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.exponentialRampToValueAtTime(0.04, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.0008, now + 1.5);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + 1.55);
+        noteIdx += 1;
+      };
+
+      playSingleNote();
+      if (musicTimer) clearInterval(musicTimer);
+      musicTimer = setInterval(playSingleNote, 660);
+    }
+
+    // 부드러운 챕터 전환
+    function goToChapter(chNum) {
+      currentChapter = chNum;
+      const screens = document.querySelectorAll(".chapter-screen");
+
+      screens.forEach((el, idx) => {
+        if (idx === chNum) {
+          el.classList.add("active-chapter");
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              el.classList.add("visible-chapter");
+            });
+          });
+        } else {
+          el.classList.remove("visible-chapter", "active-chapter");
+        }
+      });
+
+      const topNav = document.getElementById("topNav");
+      if (chNum === 0) {
+        topNav.classList.add("nav-hidden");
+      } else {
+        topNav.classList.remove("nav-hidden");
+      }
+
+      for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById("chDot" + i);
+        if (dot) {
+          dot.classList.toggle("active", i === chNum);
+        }
+      }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // Chapter 1 렌더링
+    function renderDailyChanges() {
+      const container = document.getElementById("timelineContainer");
+      container.innerHTML = "";
+
+      DAILY_CHANGES.forEach((item, idx) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "timeline-item stagger-item" + (idx === 0 ? " active-memory" : "");
+        card.innerHTML = `
+          <div class="tl-moment">${item.moment}</div>
+          <div class="tl-heading serif-kr">${item.heading}</div>
+          <p class="tl-story">${item.story}</p>
+        `;
+        card.addEventListener("click", () => {
+          document.querySelectorAll(".timeline-item").forEach((el) => el.classList.remove("active-memory"));
+          card.classList.add("active-memory");
+        });
+        container.appendChild(card);
+      });
+    }
+
+    // Chapter 2 위시리스트 렌더링
+    function renderWishes() {
+      const container = document.getElementById("wishContainer");
+      container.innerHTML = "";
+
+      FUTURE_WISHES.forEach((wish, idx) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "wish-card stagger-item" + (wish.lit ? " lit-wish" : "");
+        card.innerHTML = `
+          <div class="wish-star-icon">${wish.lit ? "★" : "☆"}</div>
+          <div class="wish-text-wrap">
+            <div class="wish-title serif-kr">${wish.title}</div>
+            <p class="wish-desc">${wish.desc}</p>
+          </div>
+        `;
+        card.addEventListener("click", () => {
+          FUTURE_WISHES[idx].lit = !FUTURE_WISHES[idx].lit;
+          renderWishes();
+          // 바로 다시 visible 유지
+          document.getElementById("chapter2").classList.add("visible-chapter");
+        });
+        container.appendChild(card);
+      });
+
+      const litCount = FUTURE_WISHES.filter((w) => w.lit).length;
+      document.getElementById("wishCountText").textContent = `${litCount} / ${FUTURE_WISHES.length} 켜짐 ✨`;
+    }
+
+    // Chapter 3 마음 서랍 렌더링
+    function renderWarmDrawers() {
+      const container = document.getElementById("drawerContainer");
+      container.innerHTML = "";
+
+      WARM_DRAWERS.forEach((item, idx) => {
+        const box = document.createElement("div");
+        box.className = "drawer-item stagger-item" + (idx === 0 ? " opened-drawer" : "");
+
+        box.innerHTML = `
+          <button type="button" class="drawer-trigger">
+            <div class="drawer-trigger-left">
+              <span class="drawer-tag">${item.tag}</span>
+              <span class="drawer-question serif-kr">${item.question}</span>
+            </div>
+            <span class="drawer-arrow">▾</span>
+          </button>
+          <div class="drawer-content">${item.answer}</div>
+        `;
+
+        const trigger = box.querySelector(".drawer-trigger");
+        trigger.addEventListener("click", () => {
+          box.classList.toggle("opened-drawer");
+        });
+
+        container.appendChild(box);
+      });
+    }
+
+    // 배경 별빛 캔버스 애니메이션
+    function initStarCanvas() {
+      const canvas = document.getElementById("starCanvas");
+      const ctx = canvas.getContext("2d");
+      let stars = [];
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        stars = Array.from({ length: 50 }, () => ({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 1.4 + 0.4,
+          alpha: Math.random() * 0.6 + 0.15,
+          speed: Math.random() * 0.007 + 0.002,
+          phase: Math.random() * Math.PI * 2
+        }));
+      }
+
+      function drawStars(time) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        stars.forEach((s) => {
+          const twinkle = s.alpha + Math.sin(time * s.speed + s.phase) * 0.2;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(229, 193, 149, ${Math.max(0.08, Math.min(0.85, twinkle))})`;
+          ctx.fill();
+        });
+        requestAnimationFrame(drawStars);
+      }
+
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+      requestAnimationFrame(drawStars);
+    }
+
+    // 전체 초기화
+    function initStoryApp() {
+      initStarCanvas();
+      renderDailyChanges();
+      renderWishes();
+      renderWarmDrawers();
+
+      // 편지 데이터 바인딩
+      document.getElementById("paperToText").textContent = MAIN_LETTER.to;
+      document.getElementById("paperDateText").textContent = MAIN_LETTER.date;
+      document.getElementById("paperBodyText").textContent = MAIN_LETTER.body;
+      document.getElementById("paperSignText").textContent = MAIN_LETTER.sign;
+
+      // 시작 버튼
+      document.getElementById("startStoryBtn").addEventListener("click", () => {
+        toggleMusicBox(true);
+        goToChapter(1);
+      });
+
+      // 오르골 토글
+      document.getElementById("audioToggleBtn").addEventListener("click", () => {
+        toggleMusicBox(false);
+      });
+
+      // 상단 점 클릭 이동
+      document.querySelectorAll(".ch-dot").forEach((dot) => {
+        dot.addEventListener("click", () => {
+          const target = parseInt(dot.getAttribute("data-ch"), 10);
+          if (target) goToChapter(target);
+        });
+      });
+
+      // 챕터 이동 버튼
+      document.getElementById("toCh2Btn").addEventListener("click", () => goToChapter(2));
+      document.getElementById("backCh1Btn").addEventListener("click", () => goToChapter(1));
+      document.getElementById("toCh3Btn").addEventListener("click", () => goToChapter(3));
+      document.getElementById("backCh2Btn").addEventListener("click", () => goToChapter(2));
+      document.getElementById("toCh4Btn").addEventListener("click", () => goToChapter(4));
+      document.getElementById("backCh3Btn").addEventListener("click", () => goToChapter(3));
+
+      // Chapter 4: 봉투 열기
+      const sealedEnvelope = document.getElementById("sealedEnvelopeBox");
+      const unfoldedPaper = document.getElementById("unfoldedPaperBox");
+      const closingLightBox = document.getElementById("closingLightBox");
+      const letterGuideSub = document.getElementById("letterGuideSub");
+
+      sealedEnvelope.addEventListener("click", () => {
+        sealedEnvelope.style.display = "none";
+        unfoldedPaper.classList.add("visible-paper");
+        closingLightBox.classList.add("show-light-box");
+        letterGuideSub.textContent = "천천히 읽어봐 누나";
+      });
+
+      // 마지막 별빛 버튼
+      const lightPromiseBtn = document.getElementById("lightPromiseBtn");
+      const lightReplyText = document.getElementById("lightReplyText");
+
+      lightPromiseBtn.addEventListener("click", () => {
+        lightPromiseBtn.classList.add("lit-active");
+        lightPromiseBtn.textContent = "💛 누나가 행복하면 나도 행복해";
+        lightReplyText.textContent = "앞으로도 내가 누나 많이 웃게 해줄게. 오늘 밤도 잘 자!";
+      });
+
+      // 처음부터 다시 보기
+      document.getElementById("resetStoryBtn").addEventListener("click", () => {
+        sealedEnvelope.style.display = "block";
+        unfoldedPaper.classList.remove("visible-paper");
+        closingLightBox.classList.remove("show-light-box");
+        letterGuideSub.textContent = "가운데 봉인을 누르면 편지가 부드럽게 펼쳐져";
+
+        lightPromiseBtn.classList.remove("lit-active");
+        lightPromiseBtn.textContent = "✨ 오늘 밤도 좋은 꿈 꾸기 (클릭)";
+        lightReplyText.textContent = "버튼을 누르면 내 마지막 인사가 나와";
+
+        goToChapter(0);
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", initStoryApp);
+  </script>
+</body>
+</html>
+```
